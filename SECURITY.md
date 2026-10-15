@@ -1,6 +1,6 @@
 # Security
 
-After the repository owner enables GitHub's private vulnerability reporting feature, use it to report security issues.
+Use the repository's "Report a vulnerability" page to send security issues privately.
 
 Do not post exploit details or Yomio account data in public issues.
 
