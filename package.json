@@ -1,0 +1,40 @@
+{
+  "name": "yomio-mcp-stdio",
+  "mcpName": "app.yomio/yomio-mcp",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Connect an MCP-compatible AI client to Yomio with browser sign-in",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ArtemGontar/yomio-mcp.git"
+  },
+  "homepage": "https://yomio.app/en/developers/mcp",
+  "keywords": [
+    "mcp",
+    "yomio",
+    "oauth",
+    "expenses"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "yomio-mcp-stdio": "index.mjs"
+  },
+  "files": [
+    "index.mjs",
+    "authRecovery.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "start": "node index.mjs",
+    "test": "node --test",
+    "prepublishOnly": "npm test && node --check index.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.0",
+    "@napi-rs/keyring": "^2.1.0"
+  }
+}
