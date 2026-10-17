@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.ArtemGontar/yomio-mcp",
+  "name": "app.yomio/yomio-mcp",
   "title": "Yomio",
   "description": "Read personal Yomio expense, income, account, budget, and spending data through MCP.",
   "version": "1.0.1",
