@@ -1,0 +1,96 @@
+name: Publish Yomio MCP npm package
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_publish:
+        description: Publish the checked connector to the public npm registry.
+        required: true
+        type: boolean
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    if: inputs.confirm_publish == true && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: publish-yomio-mcp-package
+      cancel-in-progress: false
+    environment:
+      name: production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Check npm trusted publishing support
+        run: |
+          npm install --global npm@latest
+          node -e "const [major, minor] = process.versions.node.split('.').map(Number); if (major < 22 || (major === 22 && minor < 14)) process.exit(1);"
+          npm_version=$(npm --version)
+          node -e "const [major, minor, patch] = process.argv[1].split('.').map(Number); if (major < 11 || (major === 11 && (minor < 5 || (minor === 5 && patch < 1)))) process.exit(1);" "$npm_version"
+
+      - name: Check package and Registry metadata
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { readFile } from 'node:fs/promises';
+
+          const pkg = JSON.parse(await readFile('package.json', 'utf8'));
+          const registry = JSON.parse(await readFile('server.json', 'utf8'));
+          const publishedEntry = registry.packages?.find((entry) => entry.identifier === pkg.name);
+          assert.equal(pkg.mcpName, registry.name, 'The npm package must verify ownership of the Registry name.');
+          assert.equal(pkg.repository?.url, 'git+https://github.com/ArtemGontar/yomio-mcp.git');
+          assert.equal(publishedEntry?.version, pkg.version, 'server.json must use the npm package version.');
+          assert.equal(pkg.private, undefined, 'The npm package must be public.');
+          assert.equal(pkg.license, 'MIT');
+          assert.equal(pkg.bin?.['yomio-mcp-stdio'], 'index.mjs');
+          for (const file of ['index.mjs', 'authRecovery.mjs', 'README.md', 'LICENSE']) {
+            assert.ok(pkg.files?.includes(file), `The npm package must include ${file}.`);
+            await readFile(file, 'utf8');
+          }
+          NODE
+
+      - name: Verify production OAuth endpoints
+        run: |
+          node --input-type=module <<'NODE'
+          const issuer = 'https://mcp.yomio.app';
+          const resource = `${issuer}/mcp`;
+          const checks = [
+            {
+              url: `${issuer}/.well-known/oauth-authorization-server`,
+              valid: (metadata) => metadata.issuer === issuer,
+            },
+            {
+              url: `${issuer}/.well-known/oauth-protected-resource`,
+              valid: (metadata) => metadata.resource === resource
+                && metadata.authorization_servers?.includes(issuer),
+            },
+          ];
+
+          for (const check of checks) {
+            const response = await fetch(check.url, { signal: AbortSignal.timeout(10000) });
+            if (!response.ok) throw new Error(`OAuth preflight failed: ${new URL(check.url).pathname} returned HTTP ${response.status}.`);
+            const metadata = await response.json();
+            if (!check.valid(metadata)) throw new Error(`OAuth preflight returned invalid metadata at ${new URL(check.url).pathname}.`);
+          }
+          NODE
+
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm audit --omit=dev
+      - run: npm test
+      - run: node --check index.mjs
+      - run: npm pack --dry-run
+      - name: Publish with npm trusted publishing
+        run: npm publish --access public
+      - name: Verify npm publication
+        run: |
+          package_name=$(node -p "require('./package.json').name")
+          package_version=$(node -p "require('./package.json').version")
+          npm view "${package_name}@${package_version}" version

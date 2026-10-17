@@ -114,13 +114,15 @@ The package contains no database credentials or shared user token.
 | `plugins/yomio/` | Codex and Claude Code plugin manifests and listing assets |
 | `server.json` | Official MCP Registry metadata for both remote and `npx` installs |
 | `assets/` | Yomio icon and logo for registry and repository listings |
-| `.github/workflows/` | Connector tests and security checks |
+| `.github/workflows/` | Connector tests, security checks, and npm release |
 
 ## Where the hosted source lives
 
 The local `npx` connector source is in the Yomio monorepo at [`src/mcp-stdio`](https://github.com/ArtemGontar/yomio/tree/main/src/mcp-stdio).
 The code files in this public repository match that package source.
-The [monorepo release workflow](https://github.com/ArtemGontar/yomio/blob/main/.github/workflows/publish-mcp-package.yml) publishes the npm package with npm trusted publishing.
+The [`publish-npm.yml` workflow](https://github.com/ArtemGontar/yomio-mcp/blob/main/.github/workflows/publish-npm.yml) publishes this package with npm trusted publishing.
+The npm trusted publisher must use GitHub account `ArtemGontar`, repository `yomio-mcp`, workflow `publish-npm.yml`, and environment `production`.
+This workflow runs here because npm checks that the package repository URL matches the repository that publishes it.
 
 The hosted Streamable HTTP proxy is in [`src/mcp`](https://github.com/ArtemGontar/yomio/tree/main/src/mcp).
 It hosts the MCP protocol endpoint and forwards OAuth and tool requests to the backend API.
@@ -134,7 +136,7 @@ The hosted MCP proxy has no database connection, Prisma client, or account data 
 ## Registry and plugin directories
 
 `server.json` follows the official MCP Registry format and describes the hosted endpoint and the `npx` package.
-The Yomio monorepo publishes the listing after it verifies production OAuth and MCP endpoints.
+The Yomio monorepo publishes registry updates after it verifies production OAuth and MCP endpoints.
 See the [Registry publishing workflow](https://github.com/ArtemGontar/yomio/blob/main/.github/workflows/publish-mcp.yml).
 
 Codex and Claude Code can install the repository marketplaces directly.
