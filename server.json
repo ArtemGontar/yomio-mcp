@@ -1,0 +1,36 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.ArtemGontar/yomio-mcp",
+  "title": "Yomio",
+  "description": "Read personal Yomio expense, income, account, budget, and spending data through MCP.",
+  "version": "1.0.1",
+  "websiteUrl": "https://yomio.app/en/developers/mcp",
+  "repository": {
+    "url": "https://github.com/ArtemGontar/yomio-mcp",
+    "source": "github"
+  },
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/ArtemGontar/yomio-mcp/main/assets/icon.png",
+      "mimeType": "image/png",
+      "sizes": ["1024x1024"]
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "yomio-mcp-stdio",
+      "version": "1.0.1",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.yomio.app/mcp"
+    }
+  ]
+}

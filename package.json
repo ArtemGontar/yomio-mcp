@@ -1,7 +1,7 @@
 {
   "name": "yomio-mcp-stdio",
   "mcpName": "app.yomio/yomio-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "Connect an MCP-compatible AI client to Yomio with browser sign-in",
   "license": "MIT",

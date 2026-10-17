@@ -1,0 +1,14 @@
+{
+  "name": "yomio-mcp",
+  "description": "Official Yomio MCP plugin for Claude Code.",
+  "owner": {
+    "name": "Yomio"
+  },
+  "plugins": [
+    {
+      "name": "yomio",
+      "source": "./plugins/yomio",
+      "description": "Read your personal Yomio expense and budget data."
+    }
+  ]
+}

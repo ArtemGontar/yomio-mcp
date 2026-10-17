@@ -17,7 +17,7 @@ import {
   tokensForEndpoint,
 } from './authRecovery.mjs';
 
-const VERSION = '1.0.0';
+const VERSION = '1.0.1';
 const DEFAULT_ENDPOINT = 'https://mcp.yomio.app/mcp';
 const CLIENT_METADATA_URL = 'https://yomio.app/.well-known/yomio-mcp-client.json';
 const CALLBACK_HOST = '127.0.0.1';

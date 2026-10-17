@@ -1,18 +1,26 @@
 # Yomio MCP
 
-Connect an MCP-compatible AI client to Yomio with browser sign-in.
+Connect an MCP-compatible AI client to your own Yomio account.
+This repository provides a local `npx` connector and plugin packages for Codex and Claude Code.
 
-This local stdio connector forwards MCP requests to Yomio's hosted server.
-It does not host the Yomio API or database.
+The hosted MCP endpoint is `https://mcp.yomio.app/mcp`.
+The hosted service proxies requests to the Yomio API and does not connect to the database directly.
 
-## Requirements
+## Choose a connection
 
-- Node.js 22 or newer.
-- An MCP-compatible AI client that can start a local stdio server.
-- A desktop session with a browser for first-time sign-in.
+Use the hosted endpoint when your client supports remote Streamable HTTP and OAuth.
+This needs no local package.
 
-## Install
+Use the `npx` connector when your client starts MCP servers over local stdio.
+The connector forwards requests to the hosted service.
 
+Both methods use OAuth for your Yomio account.
+The server asks you to sign in only when a protected tool call needs access.
+Connecting, initialization, and tool discovery do not open a browser.
+
+## Install with `npx`
+
+Use Node.js 22 or newer.
 Add this server to your AI client's MCP configuration:
 
 ```json
@@ -26,54 +34,118 @@ Add this server to your AI client's MCP configuration:
 }
 ```
 
-Restart or reconnect the AI client.
-On first use, Yomio opens its sign-in page in your browser.
-Review the requested read-only access and approve it for your Yomio account.
+Restart or reconnect the client.
+When you first call a protected Yomio tool, sign in and approve read-only access in the browser.
 
-The connector stores access and refresh tokens in the operating system credential store.
-It does not ask you to find, copy, or configure an access token.
-It uses saved tokens only for the exact endpoint that created the session.
-It refreshes the session when the MCP client reconnects and opens sign-in again when Yomio rejects a saved session.
+The connector stores OAuth tokens in the operating system credential store.
+It refreshes access tokens silently while the refresh grant remains valid.
+It starts browser sign-in again only when a protected tool call needs authorization and the saved grant cannot be renewed or accepted.
 
-## Remote connection
-
-MCP clients that support Streamable HTTP can connect without installing this package:
-
-- URL: `https://mcp.yomio.app/mcp`
-- Sign-in: OAuth authorization code with PKCE.
-- Scope: `mcp:read`.
-
-The remote server opens Yomio sign-in in the client's browser.
-The user approves read-only access before the MCP server receives a scoped token.
-
-## Sign out
-
-Revoke the Yomio session and remove it from the operating system credential store:
+To sign out and revoke the saved session, run:
 
 ```sh
 npx -y yomio-mcp-stdio --logout
 ```
 
-If you need to remove the local credentials while offline, run `npx -y yomio-mcp-stdio --logout-local-only`.
-The remote session remains valid until it expires or you revoke it from a connected AI client.
+The `--logout-local-only` option removes the local credential without revoking the remote session.
 
-## Linux credential storage
+## Install in Claude Code
 
-The package uses the native credential store on Windows and macOS.
-On Linux, it uses Secret Service when available, such as GNOME Keyring or KWallet.
-The native Linux fallback can keep credentials in memory and may not preserve them across a reboot.
-Use a Secret Service provider when you need a persistent sign-in.
+Add the Yomio marketplace and install its plugin:
 
-## Development endpoint
+```sh
+claude plugin marketplace add ArtemGontar/yomio-mcp
+claude plugin install yomio@yomio-mcp
+```
 
-Set `YOMIO_MCP_URL` to `https://mcp-dev.yomio.app/mcp` to connect to Yomio development.
-The package accepts only the production and development Yomio MCP endpoints.
+You can also connect directly to the hosted server:
 
-## Available tools
+```sh
+claude mcp add --transport http yomio https://mcp.yomio.app/mcp
+```
 
-The connector exposes hosted read tools for the signed-in account.
-It excludes Family Group members' records.
-It does not scan documents or write expense data.
-Use the [REST API scan quickstart](https://yomio.app/en/developers/api) to scan a receipt or invoice.
+Claude Code starts OAuth when a protected tool call needs access.
 
-See the [Yomio MCP guide](https://yomio.app/en/developers/mcp) for remote setup, security details, and the current tool list.
+## Install in Codex
+
+Add the repository marketplace:
+
+```sh
+codex plugin marketplace add ArtemGontar/yomio-mcp
+```
+
+Open the Plugins Directory in Codex or ChatGPT desktop, select the Yomio marketplace, and install Yomio.
+The plugin uses the hosted MCP endpoint and requests OAuth only when a protected tool call needs access.
+
+The repository also includes a portable Agent Plugins manifest for other clients that support this format.
+
+## Connect another MCP client
+
+For a client that supports remote Streamable HTTP and OAuth, connect to:
+
+```text
+https://mcp.yomio.app/mcp
+```
+
+For a client that supports only local stdio, use the `npx` configuration above.
+For example, Claude Code can use the package directly:
+
+```sh
+claude mcp add --transport stdio yomio -- npx -y yomio-mcp-stdio
+```
+
+## Data access
+
+The public MCP grant has the `mcp:read` scope.
+The public server exposes read-only tools for expenses, income, accounts, budgets, categories, recurring payments, and spending summaries.
+It does not expose expense creation, edits, or notes.
+It reads only the account that signed in and does not include Family Group members' records.
+
+Each person signs in to their own Yomio account.
+The package contains no database credentials or shared user token.
+
+## Repository contents
+
+| Path | Purpose |
+| --- | --- |
+| `index.mjs` | Local stdio bridge, OAuth callback, keychain storage, and hosted MCP client |
+| `authRecovery.mjs` | Saved-session selection and recovery helpers |
+| `plugins/yomio/` | Codex and Claude Code plugin manifests and listing assets |
+| `server.json` | Official MCP Registry metadata for both remote and `npx` installs |
+| `assets/` | Yomio icon and logo for registry and repository listings |
+| `.github/workflows/` | Tests and MCP Registry publishing workflow |
+
+## Where the hosted source lives
+
+The local `npx` connector is also kept in the Yomio monorepo at [`src/mcp-stdio`](https://github.com/ArtemGontar/yomio/tree/main/src/mcp-stdio).
+This public repository is its distribution repository.
+
+The hosted Streamable HTTP proxy is in [`src/mcp`](https://github.com/ArtemGontar/yomio/tree/main/src/mcp).
+It hosts the MCP protocol endpoint and forwards OAuth and tool requests to the backend API.
+
+OAuth grants and public tool execution live in [`src/backend/src/services/mcp`](https://github.com/ArtemGontar/yomio/tree/main/src/backend/src/services/mcp).
+The backend validates account identity and reads data through its existing service and repository layers.
+
+Shared tool names and schemas live in [`lib/shared/src/copilotToolDefinitions.ts`](https://github.com/ArtemGontar/yomio/blob/main/lib/shared/src/copilotToolDefinitions.ts).
+The hosted MCP proxy has no database connection, Prisma client, or account data store.
+
+## Registry and plugin directories
+
+`server.json` follows the official MCP Registry format.
+The registry workflow publishes it with GitHub OIDC when run manually or when a `mcp-v*` tag is pushed.
+
+Codex and Claude Code can install the repository marketplaces directly.
+The public ChatGPT and Codex Plugins Directory and Anthropic's public directory have separate submission and review steps.
+The manifests and icons here prepare the package for those submissions.
+
+## Security
+
+Read [SECURITY.md](SECURITY.md) before reporting a vulnerability.
+Do not include Yomio account data, OAuth codes, or tokens in public issues.
+
+## Links
+
+- [Yomio MCP guide](https://yomio.app/en/developers/mcp)
+- [Yomio privacy policy](https://yomio.app/en/privacy)
+- [Yomio terms of service](https://yomio.app/en/terms)
+- [Yomio support](https://yomio.app/en/user-guide)

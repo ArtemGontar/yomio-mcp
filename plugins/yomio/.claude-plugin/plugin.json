@@ -1,0 +1,11 @@
+{
+  "name": "yomio",
+  "version": "1.0.1",
+  "description": "Read your personal Yomio expense and budget data.",
+  "author": {
+    "name": "Yomio",
+    "email": "contact@yomio.app",
+    "url": "https://yomio.app"
+  },
+  "homepage": "https://yomio.app/en/developers/mcp"
+}

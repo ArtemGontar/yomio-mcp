@@ -1,0 +1,45 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "yomio",
+  "version": "1.0.1",
+  "description": "Read your personal Yomio expense and budget data.",
+  "author": {
+    "name": "Yomio",
+    "email": "contact@yomio.app",
+    "url": "https://yomio.app"
+  },
+  "homepage": "https://yomio.app/en/developers/mcp",
+  "repository": "https://github.com/ArtemGontar/yomio-mcp",
+  "license": "MIT",
+  "keywords": ["yomio", "expenses", "budget", "finance", "mcp"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Yomio",
+        "shortDescription": "Read expenses, budgets, and spending data",
+        "longDescription": "Connect your own Yomio account to read expenses, income, accounts, budgets, recurring payments, and spending data. Access is read-only and scoped to the account that signs in.",
+        "developerName": "Yomio",
+        "category": "Finance",
+        "capabilities": [
+          "Read expenses",
+          "Read income",
+          "Read accounts and budgets",
+          "Read spending summaries"
+        ],
+        "websiteURL": "https://yomio.app/en/developers/mcp",
+        "supportURL": "https://yomio.app/en/user-guide",
+        "privacyPolicyURL": "https://yomio.app/en/privacy",
+        "termsOfServiceURL": "https://yomio.app/en/terms",
+        "defaultPrompt": [
+          "Summarise my spending for last month.",
+          "Find my recent grocery expenses.",
+          "Show my budgets and payment accounts."
+        ],
+        "composerIcon": "./assets/icon.png",
+        "composerIconDark": "./assets/icon-dark.png",
+        "logo": "./assets/logo.png",
+        "logoDark": "./assets/logo-dark.png"
+      }
+    }
+  }
+}
