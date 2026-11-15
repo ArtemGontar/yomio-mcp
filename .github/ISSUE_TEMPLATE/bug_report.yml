@@ -1,0 +1,30 @@
+name: Bug report
+description: Something does not work.
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Connector version
+      description: Output of `npx yomio-mcp-stdio --version`.
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: AI client and operating system
+      placeholder: Claude Desktop on macOS 15
+    validations:
+      required: true
+  - type: textarea
+    id: status
+    attributes:
+      label: Output of `--status --debug`
+      description: The output never has tokens.
+      render: text
+  - type: textarea
+    id: steps
+    attributes:
+      label: What happened, and what you expected
+    validations:
+      required: true

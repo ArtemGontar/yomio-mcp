@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "yomio",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Read your personal Yomio expense and budget data.",
   "author": {
     "name": "Yomio",

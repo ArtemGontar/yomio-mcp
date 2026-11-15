@@ -49,6 +49,72 @@ npx -y yomio-mcp-stdio --logout
 
 The `--logout-local-only` option removes the local credential without revoking the remote session.
 
+## Sign in without a local browser
+
+The connector always prints the sign-in URL to the log of your AI client.
+If it cannot open a browser, it keeps waiting, and you can open the URL yourself.
+The sign-in callback returns to `127.0.0.1` on the computer that runs the connector.
+For a remote shell, forward a fixed port and set `YOMIO_MCP_CALLBACK_PORT` to that port.
+Set `YOMIO_MCP_NO_BROWSER=1` to print the URL and not open a browser.
+
+If the browser is on another computer, open the printed URL there and approve access.
+The last page may show a connection error. Copy the full address from the browser address bar and give it to the `complete_sign_in` tool in your AI client.
+The connector checks the state and issuer, so an address from another sign-in is refused.
+
+If sign-in takes longer than 45 seconds, the tool call returns a message that sign-in is waiting.
+Finish signing in, then repeat the request.
+
+## Options and environment
+
+| Option or variable | Purpose |
+| --- | --- |
+| `--status` | Show the endpoint, the credential store, and whether a session is saved. |
+| `--logout`, `--logout-local-only` | Remove the saved session, with or without revoking it at Yomio. |
+| `--debug` or `YOMIO_MCP_DEBUG=1` | Print error details to stderr. Tokens are never printed. |
+| `--version`, `--help` | Show the version or the usage text. |
+| `YOMIO_MCP_URL` | Use `https://mcp-dev.yomio.app/mcp` for development. |
+| `YOMIO_MCP_CREDENTIAL_STORE=file` | Keep the session in `~/.config/yomio-mcp/session.json` (owner access only) when no OS credential service works, such as a headless Linux host. |
+| `YOMIO_MCP_CREDENTIAL_FILE` | Path for the credential file. |
+| `YOMIO_MCP_CALLBACK_PORT` | Fixed local port for the sign-in callback. The default is a free port chosen at start. |
+
+Several AI clients can use the same saved session.
+If one client renews the session first, the others use the renewed session and do not ask you to sign in again.
+
+## Tools
+
+All tools are read-only and use the signed-in Yomio account.
+
+| Tool | Use it to |
+| --- | --- |
+| `get_expenses` | List expenses with date, merchant, category, account, and text filters. Pages with `limit` and `offset`. |
+| `search_expenses` | Find purchases by merchant or item name. |
+| `get_expense_detail` | Read one expense with all line items. |
+| `get_spending_summary` | Total spending for a date range by category or merchant. |
+| `compare_periods` | Compare spending between two date ranges. |
+| `get_spending_trends` | Spending by day, week, or month. |
+| `get_top_merchants`, `get_top_products` | Rank merchants or products by spending. |
+| `get_income_summary`, `get_income_list` | Income totals and entries. |
+| `get_balance_overview` | Income against expenses. |
+| `get_budget_status` | Spending against a monthly budget. |
+| `get_recurring_payments`, `get_accounts`, `get_categories` | Subscriptions, accounts, and category codes. |
+| `complete_sign_in` | Local tool that finishes sign-in when the browser is on another computer. |
+
+Example requests:
+
+- "How much did I spend on groceries last month, and how does it compare with the month before?"
+- "Find every purchase that has oat milk in it."
+- "Which five merchants cost me the most this year?"
+
+## Troubleshooting
+
+| Problem | What to do |
+| --- | --- |
+| A tool answers that sign-in is waiting | Finish sign-in in the browser, then repeat the request. |
+| No browser opens | Open the URL printed in your AI client log. If the browser is on another computer, pass its final address to `complete_sign_in`. |
+| The OS keychain is not available (headless Linux) | Set `YOMIO_MCP_CREDENTIAL_STORE=file`. |
+| The callback port is busy | The connector picks a free port by itself. Set `YOMIO_MCP_CALLBACK_PORT` only if you must forward a fixed port. |
+| You are asked to sign in again often | Run `npx yomio-mcp-stdio --status` to see which store is in use. A memory-only store forgets the session. |
+| Anything else | Run `npx yomio-mcp-stdio --status --debug` and open an issue with the output. |
 ## Install in Claude Code
 
 Add the Yomio marketplace and install its plugin:
@@ -109,7 +175,12 @@ The package contains no database credentials or shared user token.
 
 | Path | Purpose |
 | --- | --- |
-| `index.mjs` | Local stdio bridge, OAuth callback, keychain storage, and hosted MCP client |
+| `index.mjs` | Command line options and start-up |
+| `bridge.mjs` | Forwards tools and prompts to the hosted server and starts sign-in when needed |
+| `oauthProvider.mjs` | OAuth client state, PKCE, and saved-session handling |
+| `callbackServer.mjs` | Local sign-in callback and browser launch |
+| `credentialStore.mjs` | OS keychain, credential file, and in-memory session stores |
+| `endpoint.mjs` | Allowed Yomio endpoints |
 | `authRecovery.mjs` | Saved-session selection and recovery helpers |
 | `plugins/yomio/` | Codex and Claude Code plugin manifests and listing assets |
 | `server.json` | Official MCP Registry metadata for both remote and `npx` installs |

@@ -3,7 +3,7 @@
   "name": "app.yomio/yomio-mcp",
   "title": "Yomio",
   "description": "Read personal Yomio expense, income, account, budget, and spending data through MCP.",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "websiteUrl": "https://yomio.app/en/developers/mcp",
   "repository": {
     "url": "https://github.com/ArtemGontar/yomio-mcp",
@@ -20,7 +20,7 @@
     {
       "registryType": "npm",
       "identifier": "yomio-mcp-stdio",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"

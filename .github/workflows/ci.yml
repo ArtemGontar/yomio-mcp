@@ -9,9 +9,12 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # The connector uses a native keyring module, so test the systems people use.
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
         node-version: [22, 24]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -20,5 +23,40 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
       - run: npm test
+      - run: npm run check
       - run: npm audit --omit=dev
-      - run: node --check index.mjs
+
+  package:
+    name: Packed install and manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 24
+      - name: Manifests are valid JSON and use one version
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { readFileSync } from 'node:fs';
+          const read = (path) => JSON.parse(readFileSync(path, 'utf8'));
+          const pkg = read('package.json');
+          for (const path of [
+            'server.json',
+            '.agents/plugins/marketplace.json',
+            '.claude-plugin/marketplace.json',
+            'plugins/yomio/.mcp.json',
+            'plugins/yomio/mcp.json',
+          ]) read(path);
+          for (const path of ['plugins/yomio/plugin.json', 'plugins/yomio/.claude-plugin/plugin.json', 'server.json']) {
+            assert.equal(read(path).version, pkg.version, `${path} must use version ${pkg.version}`);
+          }
+          assert.equal(read('server.json').name, pkg.mcpName);
+          NODE
+      - name: The npm tarball starts from a clean install
+        run: |
+          npm pack --silent
+          mkdir smoke && cd smoke && npm init -y >/dev/null
+          npm install --silent ../yomio-mcp-stdio-*.tgz
+          npx --no-install yomio-mcp-stdio --version
+          npx --no-install yomio-mcp-stdio --help | head -n 3
